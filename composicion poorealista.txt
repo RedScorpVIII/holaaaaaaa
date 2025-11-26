@@ -1,0 +1,13 @@
+class Motor
+    def arrancar(self)
+        return Motor encendido
+
+class Auto
+    def __init__(self)
+        self.motor = Motor()
+
+    def encender(self)
+        return self.motor.arrancar()
+
+a = Auto()
+print(a.encender())

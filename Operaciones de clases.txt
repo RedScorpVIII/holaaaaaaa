@@ -1,0 +1,12 @@
+class Matematica:
+
+    @staticmethod
+    def sumar(a, b):
+        return a + b
+
+    @classmethod
+    def descripcion(cls):
+        return "Clase de operaciones matemáticas"
+
+print(Matematica.sumar(3, 5))
+print(Matematica.descripcion())

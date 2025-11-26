@@ -1,0 +1,115 @@
+import argparse
+import os
+import sys
+import tempfile
+import zipfile
+import time
+
+try:
+    import numpy as np
+    import cv2
+except Exception as e:
+    print("Error: falta una dependencia local (cv2/numpy).")
+    raise
+
+try:
+    import tensorflow as tf
+    from tensorflow.keras.models import load_model
+except Exception as e:
+        sys.exit(1)
+
+
+def prepare_model_path(path):
+
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Modelo no encontrado: {path}")
+
+    if zipfile.is_zipfile(path):
+        tmp = tempfile.mkdtemp(prefix="model_unzip_")
+        with zipfile.ZipFile(path, 'r') as z:
+            z.extractall(tmp)
+        # Buscar un archivo .keras
+        for root, dirs, files in os.walk(tmp):
+            for f in files:
+                if f.endswith('.keras'):
+                    return os.path.join(root, f)
+            if 'saved_model.pb' in files:
+                return root
+
+        return tmp
+    else:
+        return path
+
+
+def has_display():
+    if os.name == 'nt':
+        return True
+    return bool(os.environ.get('DISPLAY'))
+
+
+def main():
+    p = argparse.ArgumentParser(description='Ejecutar modelo Keras en vivo desde la cámara (adaptado de Colab).')
+    p.add_argument('-m', '--model', default='modelov2.keras.zip', help='Ruta al modelo (.keras, carpeta SavedModel, o .zip)')
+    p.add_argument('-d', '--device', type=int, default=0, help='Índice del dispositivo de cámara (por defecto 0)')
+    p.add_argument('--headless', action='store_true', help='No mostrar ventana (útil en servidores)')
+    p.add_argument('--image-size', type=int, nargs=2, default=(200, 200), help='Tamaño (w h) para redimensionar la imagen')
+    args = p.parse_args()
+
+    try:
+        model_path = prepare_model_path(args.model)
+        model = load_model(model_path)
+        print(f"Modelo cargado desde: {model_path}")
+    except Exception as e:
+        print(f"Error cargando modelo: {e}")
+        sys.exit(2)
+
+    CLASS_NAMES = ['borrador', 'mRojo', 'mNegro', 'mAzul', 'nada']
+    IMAGE_SIZE = tuple(args.image_size)
+
+    cap = cv2.VideoCapture(args.device)
+    if not cap.isOpened():
+        print(f"No se pudo abrir la cámara {args.device}. Prueba con otro índice (0,1,2...).")
+        sys.exit(3)
+
+    print("Cámara abierta. Presiona 'q' en la ventana para salir.")
+
+    display = has_display() and not args.headless
+    if not display:
+        print("Modo headless: no se mostrará la ventana. Usa --headless para forzar este comportamiento.")
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            print("No se pudo leer frame. Saliendo...")
+            break
+
+        img = cv2.resize(frame, IMAGE_SIZE, interpolation=cv2.INTER_AREA)
+        img = np.expand_dims(img, axis=0)
+        img = tf.cast(img, tf.float32) / 255.0
+
+        preds = model.predict(img, verbose=0)
+        idx = int(np.argmax(preds[0]))
+        label = CLASS_NAMES[idx] if idx < len(CLASS_NAMES) else f"Clase {idx}"
+        conf = float(np.max(preds[0])) * 100.0
+
+        text = f'{label} ({conf:.2f}%)'
+        cv2.putText(frame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+        if display:
+            cv2.imshow('Live Prediction', frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+        else:
+            print(text)
+            time.sleep(0.5)
+
+    cap.release()
+    if display:
+        cv2.destroyAllWindows()
+
+
+if _name_ == '_main_':
+    main()
+
+
+CODIGO FUNCIONAL DE MODELO

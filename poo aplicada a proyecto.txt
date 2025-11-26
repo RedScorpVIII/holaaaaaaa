@@ -1,0 +1,29 @@
+from datetime import datetime
+
+class Elemento:
+    def __init__(self, nombre):
+        self.nombre = nombre
+        self.timestamp = None
+        self.existe = None
+
+    def verificar(self, hay_elemento):
+        self.timestamp = datetime.now()
+        self.existe = hay_elemento
+
+        if hay_elemento:
+            return f"There are enough supplies of the {self.nombre} requested"
+        else:
+            return f"There are no supplies of the {self.nombre} requested"
+
+
+class Marcador(Elemento):
+    pass  # hereda todo de Elemento
+
+class Borrador(Elemento):
+    pass
+
+
+# Ejemplo de uso:
+m = Marcador("marker red")
+resultado = m.verificar(hay_elemento=True)
+print(resultado)

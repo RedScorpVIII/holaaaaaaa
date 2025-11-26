@@ -1,0 +1,92 @@
+import time
+from datetime import datetime
+
+class ElementoBase:
+    """
+    Clase base para los elementos del tablero (marcadores y borrador).
+    Registra:
+    - nombre del elemento
+    - timestamp de verificación
+    - resultado (True/False)
+    """
+
+    def __init__(self, nombre):
+        self.nombre = nombre
+        self.ultimo_timestamp = None
+        self.ultimo_resultado = None
+
+    def verificar_existencia(self, existe_en_tablero):
+        """
+        Actualiza el timestamp y el resultado de la verificación.
+        """
+        self.ultimo_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.ultimo_resultado = existe_en_tablero
+        return existe_en_tablero
+
+    def obtener_mensaje_email(self):
+        """
+        Devuelve el mensaje que se debe enviar por email según el resultado.
+        """
+        if self.ultimo_resultado:
+            return f"there are enough supplies of the {self.nombre} requested"
+        else:
+            return f"there are no supplies of the {self.nombre} requested"
+
+
+class Marcador(ElementoBase):
+    """
+    Clase para los marcadores (rojo, azul, negro).
+    """
+    def __init__(self, color):
+        nombre = f"marker {color}"
+        super().__init__(nombre)
+        self.color = color
+
+
+class Borrador(ElementoBase):
+    """
+    Clase para el borrador del pizarrón.
+    """
+    def __init__(self):
+        super().__init__("eraser")
+
+
+class SistemaVerificacion:
+    """
+    Administra las solicitudes del usuario y realiza la verificación
+    usando un sistema externo (modelo de visión).
+    """
+
+    def __init__(self):
+        # Se crean las instancias de cada elemento disponible
+        self.elementos = {
+            "rojo": Marcador("red"),
+            "azul": Marcador("blue"),
+            "negro": Marcador("black"),
+            "borrador": Borrador()
+        }
+
+    def verificar(self, elemento_solicitado, existe_en_tablero):
+        """
+        Ejecuta la verificación para el elemento solicitado.
+        'existe_en_tablero' normalmente vendrá de tu modelo de visión.
+        """
+        elemento = self.elementos.get(elemento_solicitado.lower())
+        if not elemento:
+            raise ValueError(f"Elemento desconocido: {elemento_solicitado}")
+
+        resultado = elemento.verificar_existencia(existe_en_tablero)
+        mensaje = elemento.obtener_mensaje_email()
+
+        # Aquí más adelante se deberá enviar un correo real
+        print(f"[EMAIL SIMULADO] {mensaje}")
+
+        # Aquí más adelante se implementará el guardado en .txt
+        # Aquí más adelante se activarán los LEDs por 5 segundos
+
+        return {
+            "elemento": elemento.nombre,
+            "resultado": resultado,
+            "mensaje": mensaje,
+            "timestamp": elemento.ultimo_timestamp
+        }

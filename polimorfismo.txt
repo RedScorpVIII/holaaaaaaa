@@ -1,0 +1,14 @@
+class Ave:
+    def sonido(self):
+        return "Sonido genérico"
+
+class Loro(Ave):
+    def sonido(self):
+        return "Hola humano"
+
+class Aguila(Ave):
+    def sonido(self):
+        return "Grrr"
+
+for ave in [Loro(), Aguila()]:
+    print(ave.sonido())

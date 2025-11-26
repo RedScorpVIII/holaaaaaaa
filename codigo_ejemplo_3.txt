@@ -1,0 +1,10 @@
+sistema = SistemaVerificacion()
+
+# Simulación: el usuario pide "rojo"
+elemento = "rojo"
+
+# Simulación: el modelo encontró un marcador rojo en la imagen
+existe = True
+
+resultado = sistema.verificar(elemento, existe)
+print(resultado)

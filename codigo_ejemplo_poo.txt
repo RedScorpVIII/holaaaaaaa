@@ -1,0 +1,87 @@
+import time
+from datetime import datetime
+
+class ElementoBase:
+    def __init__(self, nombre):
+        self.nombre = nombre
+        self.timestamp = None
+        self.existe = None
+
+    def verificar(self, existe_en_tablero):
+        """
+        Registra timestamp y resultado.
+        'existe_en_tablero' será un booleano que después conectarás con tu modelo.
+        """
+        self.timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.existe = existe_en_tablero
+
+        if self.existe:
+            return f"there are enough supplies of the {self.nombre} requested"
+        else:
+            return f"there are no supplies of the {self.nombre} requested"
+
+class Marcador(ElementoBase):
+    def __init__(self, color):
+        super().__init__(f"marker {color}")
+        self.color = color
+
+class Borrador(ElementoBase):
+    def __init__(self):
+        super().__init__("eraser")
+
+
+# ------------------------------
+# Sistema que gestiona la lógica
+# ------------------------------
+
+class SistemaVerificacion:
+    def __init__(self):
+        # Aquí instancias los objetos disponibles
+        self.elementos = {
+            'rojo': Marcador("red"),
+            'azul': Marcador("blue"),
+            'negro': Marcador("black"),
+            'borrador': Borrador()
+        }
+
+    def solicitar_elemento(self, nombre_usuario):
+        """
+        El usuario pide un elemento desde terminal.
+        """
+        nombre_usuario = nombre_usuario.lower()
+
+        if nombre_usuario not in self.elementos:
+            return "Ese elemento no existe en la lista."
+
+        elemento = self.elementos[nombre_usuario]
+
+        # Aquí simulas detección (luego lo conectas con tu modelo real)
+        existe_en_tablero = self.simular_deteccion(nombre_usuario)
+
+        mensaje = elemento.verificar(existe_en_tablero)
+        return mensaje
+
+    def simular_deteccion(self, nombre):
+        """
+        Por ahora lo simulamos.
+        Cambia esto luego por tu detección real.
+        """
+        simulacion = {
+            'rojo': True,
+            'azul': False,
+            'negro': True,
+            'borrador': False
+        }
+        return simulacion.get(nombre, False)
+
+
+# ---------------------------------------
+# Ejemplo sencillo de cómo se usaría
+# ---------------------------------------
+
+if __name__ == "__main__":
+    sistema = SistemaVerificacion()
+
+    elemento = input("¿Qué elemento deseas verificar? (rojo, azul, negro, borrador): ")
+    resultado = sistema.solicitar_elemento(elemento)
+    print(resultado)
